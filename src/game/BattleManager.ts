@@ -37,14 +37,14 @@ export class BattleManager {
   createBattle(player1Id: string, player2Id: string): GameState {
     const battleId = uuidv4();
 
-    // Создание персонажей для игрока 1 (правая сторона)
+
     const player1Characters = this.createDefaultCharacters(Team.PLAYER1, [
       { x: 7, y: 1 },
       { x: 7, y: 4 },
       { x: 7, y: 7 },
     ]);
 
-    // Создание персонажей для игрока 2 (левая сторона)
+
     const player2Characters = this.createDefaultCharacters(Team.PLAYER2, [
       { x: 0, y: 1 },
       { x: 0, y: 4 },
@@ -82,7 +82,7 @@ export class BattleManager {
     playerId: string,
     gameState: GameState
   ): ActionResult {
-    // Проверка, что сейчас ход игрока
+
     if (!this.turnManager.canAct(playerId, gameState)) {
       return {
         success: false,
@@ -128,13 +128,13 @@ export class BattleManager {
       return { success: false, error: 'Character not found' };
     }
 
-    // Проверка возможности перемещения
+
     const canMove = this.movementSystem.canMove(character, action.to, gameState);
     if (!canMove.valid) {
       return { success: false, error: canMove.error };
     }
 
-    // Выполнение перемещения
+
     this.movementSystem.executeMove(character, action.to, gameState);
     gameState.updatedAt = new Date();
 
@@ -155,17 +155,17 @@ export class BattleManager {
       return { success: false, error: 'Character not found' };
     }
 
-    // Проверка возможности атаки
+
     const canAttack = this.combatSystem.canAttack(attacker, target, gameState);
     if (!canAttack.valid) {
       return { success: false, error: canAttack.error };
     }
 
-    // Выполнение атаки
+
     const result = this.combatSystem.executeAttack(attacker, target, gameState);
     gameState.updatedAt = new Date();
 
-    // Проверка окончания боя
+
     const battleEnd = this.combatSystem.checkBattleEnd(gameState);
     if (battleEnd.ended) {
       gameState.status = 'finished';
@@ -200,11 +200,11 @@ export class BattleManager {
   private handleSurrender(playerId: string, gameState: GameState): ActionResult {
     console.log(`Player ${playerId} surrendered in battle ${gameState.id}`);
     
-    // Определяем проигравшего (инициатор сдачи) и победителя
+
     const loser = playerId === gameState.player1Id ? Team.PLAYER1 : Team.PLAYER2;
     const winner = loser === Team.PLAYER1 ? Team.PLAYER2 : Team.PLAYER1;
     
-    // Завершаем битву
+
     gameState.status = 'finished';
     gameState.winner = winner;
     gameState.updatedAt = new Date();
@@ -223,7 +223,7 @@ export class BattleManager {
   private createDefaultCharacters(team: Team, positions: { x: number; y: number }[]): Character[] {
     const characters: Character[] = [];
 
-    // Воин (ближний бой)
+
     characters.push({
       id: uuidv4(),
       name: team === Team.PLAYER1 ? 'Warrior P1' : 'Warrior P2',
@@ -243,7 +243,7 @@ export class BattleManager {
       hasAttacked: false,
     });
 
-    // Лучник (дальний бой)
+
     characters.push({
       id: uuidv4(),
       name: team === Team.PLAYER1 ? 'Archer P1' : 'Archer P2',
@@ -263,7 +263,7 @@ export class BattleManager {
       hasAttacked: false,
     });
 
-    // Рыцарь (ближний бой, танк)
+
     characters.push({
       id: uuidv4(),
       name: team === Team.PLAYER1 ? 'Knight P1' : 'Knight P2',

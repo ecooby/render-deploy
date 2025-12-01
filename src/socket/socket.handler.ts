@@ -28,7 +28,7 @@ export class SocketHandler {
       this.battleManager,
       (gameState: GameState) => {
         this.activeBattles.set(gameState.id, gameState);
-        // Запускаем таймеры для новой битвы
+
         this.startBattleTimers(gameState.id, gameState);
       },
     );
@@ -41,11 +41,11 @@ export class SocketHandler {
     this.io.on(SocketEvent.CONNECT, (socket: Socket) => {
       console.log(`Client connected: ${socket.id}`);
 
-      // Получаем ID игрока из handshake
+
       const playerId = socket.handshake.auth.playerId || socket.id;
       this.playerSockets.set(playerId, socket.id);
 
-      // Регистрируем обработчики событий
+
       this.registerMatchmakingHandlers(socket, playerId);
       this.registerBattleHandlers(socket, playerId);
       this.registerDisconnectHandler(socket, playerId);
@@ -56,13 +56,13 @@ export class SocketHandler {
    * Обработчики matchmaking
    */
   private registerMatchmakingHandlers(socket: Socket, playerId: string) {
-    // Присоединение к очереди
+
     socket.on(SocketEvent.MATCHMAKING_JOIN, () => {
       console.log(`Player ${playerId} joining matchmaking`);
       this.matchmakingService.addToQueue(socket, playerId);
     });
 
-    // Игра с ботом
+
     socket.on(SocketEvent.MATCHMAKING_BOT, () => {
       console.log(`Player ${playerId} requested Bot game`);
       const battle = this.battleManager.createBattle(playerId, 'AI_BOT');
@@ -75,7 +75,7 @@ export class SocketHandler {
       });
     });
 
-    // Выход из очереди
+
     socket.on(SocketEvent.MATCHMAKING_LEAVE, () => {
       console.log(`Player ${playerId} leaving matchmaking`);
       this.matchmakingService.removeFromQueue(playerId);
@@ -86,7 +86,7 @@ export class SocketHandler {
    * Обработчики битвы
    */
   private registerBattleHandlers(socket: Socket, playerId: string) {
-    // Присоединение к битве
+
     socket.on(SocketEvent.BATTLE_JOIN, (battleId: string) => {
       const gameState = this.activeBattles.get(battleId);
       if (!gameState) {
@@ -94,21 +94,21 @@ export class SocketHandler {
         return;
       }
 
-      // Проверяем, является ли игрок участником битвы
+
       const isParticipant = playerId === gameState.player1Id || playerId === gameState.player2Id;
       const role = isParticipant ? 'participant' : 'spectator';
       
       console.log(`Player ${playerId} joining battle ${battleId} as ${role}`);
       socket.join(battleId);
 
-      // Отправляем текущее состояние с ролью
+
       socket.emit(SocketEvent.BATTLE_STATE, {
         ...gameState,
         spectatorMode: !isParticipant
       });
     });
 
-    // Действие в битве
+
     socket.on(SocketEvent.BATTLE_ACTION, (data: { battleId: string; action: BattleAction }) => {
       console.log(`Player ${playerId} action in battle ${data.battleId}:`, data.action.type);
       
@@ -122,7 +122,7 @@ export class SocketHandler {
       return;
     }
 
-    // 🔒 SECURITY: Проверяем, что игрок - участник битвы, а не наблюдатель
+
     const isParticipant = playerId === gameState.player1Id || playerId === gameState.player2Id;
     if (!isParticipant) {
       console.warn(`⚠️ Spectator ${playerId} attempted to perform action in battle ${battleId}`);
@@ -132,11 +132,11 @@ export class SocketHandler {
       return;
     }
 
-      // Обработка действия
+
       const result = this.battleManager.processAction(action, playerId, gameState);
 
       if (!result.success) {
-        // Ошибка - отправляем только игроку
+
         const socketId = this.playerSockets.get(playerId);
         if (socketId) {
            this.io.to(socketId).emit(SocketEvent.BATTLE_ERROR, { message: result.error });
@@ -144,11 +144,11 @@ export class SocketHandler {
         return;
       }
 
-      // Успех - обновляем состояние
+
       if (result.newState) {
         this.activeBattles.set(battleId, result.newState);
 
-        // Отправляем обновление всем игрокам в битве
+
         this.io.to(battleId).emit(SocketEvent.BATTLE_UPDATE, {
           gameState: result.newState,
           action: action,
@@ -156,12 +156,12 @@ export class SocketHandler {
           killedCharacterId: result.killedCharacterId,
         });
 
-        // Проверка окончания битвы
+
         if (result.newState.status === 'finished') {
           this.timerManager.clearAllTimers(battleId);
           this.handleBattleEnd(battleId, result.newState);
         } else {
-           // Если ход завершён, перезапускаем таймер хода
+
            if (action.type === ActionType.END_TURN) {
              this.timerManager.startTurnTimer(battleId, result.newState, (bId) => {
                this.handleTurnTimeout(bId);
@@ -190,14 +190,14 @@ export class SocketHandler {
     socket.on(SocketEvent.DISCONNECT, () => {
       console.log(`Client disconnected: ${socket.id} (Player: ${playerId})`);
 
-      // Удаляем из очереди matchmaking
+
       this.matchmakingService.removeFromQueue(playerId);
 
-      // Удаляем из карты сокетов
+
       this.playerSockets.delete(playerId);
 
-      // TODO: Обработка отключения во время битвы
-      // Можно дать игроку время на переподключение
+
+
     });
   }
 
@@ -205,12 +205,12 @@ export class SocketHandler {
    * Запуск таймеров для битвы
    */
   private startBattleTimers(battleId: string, gameState: GameState): void {
-    // Таймер хода
+
     this.timerManager.startTurnTimer(battleId, gameState, (bId) => {
       this.handleTurnTimeout(bId);
     });
 
-    // Таймер битвы
+
     this.timerManager.startBattleTimer(battleId, gameState, (bId) => {
       this.handleBattleTimeout(bId);
     });
@@ -227,7 +227,7 @@ export class SocketHandler {
 
     console.log(`⏰ Turn timeout - auto ending turn for ${gameState.currentTurn}`);
 
-    // Автоматически завершаем ход
+
     const action: BattleAction = {
       type: ActionType.END_TURN,
     };
@@ -246,15 +246,15 @@ export class SocketHandler {
 
     console.log(`⏰ Battle timeout - determining winner by remaining forces`);
 
-    // Определяем победителя
+
     gameState.winner = this.timerManager.determineWinnerByTime(gameState);
     gameState.status = 'finished';
     this.activeBattles.set(battleId, gameState);
 
-    // Очищаем таймеры
+
     this.timerManager.clearAllTimers(battleId);
 
-    // Завершаем битву
+
     this.handleBattleEnd(battleId, gameState);
   }
 
@@ -289,7 +289,7 @@ export class SocketHandler {
       console.error('Error updating stats:', error);
     }
 
-    // Отправляем результаты
+
     this.io.to(battleId).emit(SocketEvent.BATTLE_END, {
       winner: gameState.winner,
       rewards: {
@@ -298,12 +298,12 @@ export class SocketHandler {
       },
     });
 
-    // Удаляем битву через некоторое время
+
     setTimeout(() => {
       this.activeBattles.delete(battleId);
       this.timerManager.clearAllTimers(battleId);
       console.log(`Battle ${battleId} removed from active battles`);
-    }, 30000); // 30 секунд
+    }, 30000);
   }
 
   /**

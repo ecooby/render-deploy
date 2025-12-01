@@ -8,7 +8,7 @@ export class TurnManager {
    * Начать новый ход
    */
   startTurn(gameState: GameState): GameState {
-    // Сброс флагов персонажей текущей команды
+
     const currentTeam = gameState.currentTurn;
     
     gameState.characters.forEach(char => {
@@ -18,10 +18,10 @@ export class TurnManager {
       }
     });
 
-    // Восстановление очков передвижения
+
     gameState.movementPointsLeft = GAME_CONSTANTS.MOVEMENT_POINTS_PER_TURN;
 
-    // Обновляем время начала хода
+
     gameState.turnStartTime = Date.now();
 
     return gameState;
@@ -31,17 +31,17 @@ export class TurnManager {
    * Завершить текущий ход и передать ход противнику
    */
   endTurn(gameState: GameState): GameState {
-    // Переключение хода
+
     gameState.currentTurn = gameState.currentTurn === Team.PLAYER1 
       ? Team.PLAYER2 
       : Team.PLAYER1;
 
-    // Увеличение номера хода
+
     if (gameState.currentTurn === Team.PLAYER1) {
       gameState.turnNumber++;
     }
 
-    // Начало нового хода
+
     return this.startTurn(gameState);
   }
 
@@ -71,14 +71,14 @@ export class TurnManager {
       c => c.team === currentTeam && c.isAlive
     );
 
-    // Есть ли очки передвижения
+
     if (gameState.movementPointsLeft > 0) {
-      // Есть ли персонажи, которые могут двигаться
+
       const canMove = teamCharacters.some(c => !c.hasMoved);
       if (canMove) return true;
     }
 
-    // Есть ли персонажи, которые могут атаковать
+
     const canAttack = teamCharacters.some(c => !c.hasAttacked);
     if (canAttack) return true;
 

@@ -28,7 +28,7 @@ export class MatchmakingService {
    * Добавить игрока в очередь
    */
   addToQueue(socket: Socket, playerId: string, rating = 1000) {
-    // Проверка, не в очереди ли уже
+
     if (this.queue.has(playerId)) {
       socket.emit(SocketEvent.BATTLE_ERROR, { message: 'Already in queue' });
       return;
@@ -44,7 +44,7 @@ export class MatchmakingService {
     this.queue.set(playerId, player);
     console.log(`Player ${playerId} joined matchmaking queue`);
 
-    // Попытка найти матч
+
     this.tryMatchPlayers(player);
   }
 
@@ -62,21 +62,21 @@ export class MatchmakingService {
    * Попытка найти матч для игрока
    */
   private tryMatchPlayers(player: QueuedPlayer) {
-    // Ищем подходящего противника
+
     for (const [opponentId, opponent] of this.queue) {
-      // Пропускаем самого игрока
+
       if (opponentId === player.id) continue;
 
-      // Проверка разницы в рейтинге (±200)
+
       const ratingDiff = Math.abs(player.rating - opponent.rating);
       if (ratingDiff > 200) continue;
 
-      // Найден подходящий противник!
+
       this.createMatch(player, opponent);
       return;
     }
 
-    // Противник не найден, ждем в очереди
+
     console.log(`No opponent found for player ${player.id}, waiting...`);
   }
 
@@ -84,30 +84,30 @@ export class MatchmakingService {
    * Создать матч между двумя игроками
    */
   private createMatch(player1: QueuedPlayer, player2: QueuedPlayer) {
-    // Удаляем игроков из очереди
+
     this.queue.delete(player1.id);
     this.queue.delete(player2.id);
 
-    // Создаем битву
+
     const gameState = this.battleManager.createBattle(player1.id, player2.id);
 
-    // Уведомляем внешний код о создании новой битвы (для регистрации в activeBattles)
+
     if (this.onBattleCreated) {
       this.onBattleCreated(gameState);
     }
 
     console.log(`Match created: ${player1.id} vs ${player2.id}`);
 
-    // Уведомляем игроков
+
     const player1Socket = this.io.sockets.sockets.get(player1.socketId);
     const player2Socket = this.io.sockets.sockets.get(player2.socketId);
 
     if (player1Socket && player2Socket) {
-      // Присоединяем к комнате битвы
+
       player1Socket.join(gameState.id);
       player2Socket.join(gameState.id);
 
-      // Отправляем уведомления
+
       const matchFoundPlayer1: MatchFound = {
         battleId: gameState.id,
         opponent: {
@@ -129,7 +129,7 @@ export class MatchmakingService {
       player1Socket.emit(SocketEvent.MATCHMAKING_FOUND, matchFoundPlayer1);
       player2Socket.emit(SocketEvent.MATCHMAKING_FOUND, matchFoundPlayer2);
 
-      // Отправляем начальное состояние игры
+
       this.io.to(gameState.id).emit(SocketEvent.BATTLE_STATE, gameState);
     }
   }

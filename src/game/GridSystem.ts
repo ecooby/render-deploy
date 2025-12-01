@@ -62,10 +62,10 @@ export class GridSystem {
           { x: -1, y: 1 },  { x: 0, y: 1 },  { x: 1, y: 1 },
         ]
       : [
-          { x: 0, y: -1 }, // вверх
-          { x: -1, y: 0 }, // влево
-          { x: 1, y: 0 },  // вправо
-          { x: 0, y: 1 },  // вниз
+          { x: 0, y: -1 },
+          { x: -1, y: 0 },
+          { x: 1, y: 0 },
+          { x: 0, y: 1 },
         ];
 
     return directions
@@ -77,14 +77,14 @@ export class GridSystem {
    * Проверка прямой видимости между двумя точками (для дальнего боя)
    */
   hasLineOfSight(from: Position, to: Position, occupiedCells: Position[]): boolean {
-    // Используем алгоритм Bresenham для проверки линии
+
     const points = this.getLinePoints(from, to);
     
-    // Проверяем, нет ли препятствий на пути (кроме начальной и конечной точки)
+
     for (let i = 1; i < points.length - 1; i++) {
       const point = points[i];
       if (occupiedCells.some(cell => cell.x === point.x && cell.y === point.y)) {
-        return false; // Путь заблокирован
+        return false;
       }
     }
     

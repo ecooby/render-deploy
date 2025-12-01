@@ -19,17 +19,17 @@ export class MovementSystem {
     to: Position,
     gameState: GameState
   ): { valid: boolean; error?: string } {
-    // Проверка, что персонаж еще не двигался
+
     if (character.hasMoved) {
       return { valid: false, error: 'Character has already moved this turn' };
     }
 
-    // Проверка валидности позиции
+
     if (!this.gridSystem.isValidPosition(to)) {
       return { valid: false, error: 'Invalid position' };
     }
 
-    // Проверка, что целевая клетка не занята ДРУГИМ персонажем
+
     const targetOccupiedByOther = gameState.characters.some(
       char => char.isAlive && 
               char.id !== character.id && 
@@ -40,7 +40,7 @@ export class MovementSystem {
       return { valid: false, error: 'Cell is occupied by another character' };
     }
 
-    // Проверка пути (A* pathfinding)
+
     const path = this.findPath(character.position, to, gameState.characters, character.id);
     if (!path) {
       console.log('❌ Path not found:', {
@@ -52,10 +52,10 @@ export class MovementSystem {
       return { valid: false, error: 'No valid path to destination' };
     }
     
-    // Длина пути (без учёта стартовой позиции)
+
     const pathLength = path.length - 1;
     
-    // Проверка очков движения
+
     if (pathLength > gameState.movementPointsLeft) {
       console.log('⚠️ Path too long:', {
         pathLength,
@@ -80,11 +80,11 @@ export class MovementSystem {
   ): GameState {
     const distance = this.gridSystem.calculateDistance(character.position, to);
     
-    // Обновляем позицию персонажа
+
     character.position = to;
     character.hasMoved = true;
     
-    // Уменьшаем очки передвижения
+
     gameState.movementPointsLeft -= distance;
 
     return gameState;
@@ -97,16 +97,16 @@ export class MovementSystem {
     const available: Position[] = [];
     const range = gameState.movementPointsLeft;
 
-    // Проверяем все клетки в радиусе
+
     const cellsInRange = this.gridSystem.getCellsInRange(character.position, range);
 
     for (const cell of cellsInRange) {
-      // Пропускаем текущую позицию
+
       if (this.gridSystem.positionsEqual(cell, character.position)) {
         continue;
       }
 
-      // Проверяем, можно ли туда переместиться
+
       const canMove = this.canMove(character, cell, gameState);
       if (canMove.valid) {
         available.push(cell);
@@ -146,7 +146,7 @@ export class MovementSystem {
     fScore.set(posKey(start), this.gridSystem.calculateDistance(start, goal));
 
     while (openSet.length > 0) {
-      // Находим узел с минимальным fScore
+
       let current = openSet[0];
       let currentIndex = 0;
       for (let i = 1; i < openSet.length; i++) {
@@ -156,7 +156,7 @@ export class MovementSystem {
         }
       }
 
-      // Достигли цели
+
       if (this.gridSystem.positionsEqual(current, goal)) {
         return this.reconstructPath(cameFrom, current);
       }
@@ -164,15 +164,15 @@ export class MovementSystem {
       openSet.splice(currentIndex, 1);
       closedSet.add(posKey(current));
 
-      // Проверяем соседей
+
       const neighbors = this.gridSystem.getAdjacentCells(current);
       for (const neighbor of neighbors) {
-        // Пропускаем уже проверенные узлы
+
         if (closedSet.has(posKey(neighbor))) {
           continue;
         }
 
-        // Пропускаем занятые клетки (кроме цели и своей текущей позиции)
+
         if (!this.gridSystem.positionsEqual(neighbor, goal)) {
           const occupiedByOther = characters.some(
             char => char.isAlive && 
@@ -201,7 +201,7 @@ export class MovementSystem {
       }
     }
 
-    return null; // Путь не найден
+    return null;
   }
 
   /**

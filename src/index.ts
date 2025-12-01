@@ -6,13 +6,13 @@ import dotenv from 'dotenv';
 import { SocketHandler } from './socket/socket.handler';
 import { authService } from './services/AuthService';
 
-// Загрузка переменных окружения
+
 dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
 
-// Настройка CORS
+
 const rawAllowedOrigins = process.env.ALLOWED_ORIGINS;
 const allowedOrigins: string | string[] = !rawAllowedOrigins || rawAllowedOrigins === '*'
   ? '*'
@@ -29,7 +29,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// Socket.io с CORS
+
 const io = new Server(httpServer, {
   cors: {
     origin: allowedOrigins,
@@ -38,7 +38,7 @@ const io = new Server(httpServer, {
   },
 });
 
-// Инициализация Socket handler
+
 const socketHandler = new SocketHandler(io);
 socketHandler.initialize();
 

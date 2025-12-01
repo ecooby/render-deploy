@@ -15,10 +15,10 @@ export class TimerManager {
     gameState: GameState,
     onTurnTimeout: (battleId: string) => void
   ): void {
-    // Очищаем предыдущий таймер хода
+
     this.clearTurnTimer(battleId);
 
-    const timeLimit = gameState.turnTimeLimit * 1000; // в миллисекундах
+    const timeLimit = gameState.turnTimeLimit * 1000;
 
     const timer = setTimeout(() => {
       console.log(`⏰ Turn timeout for battle ${battleId}`);
@@ -36,10 +36,10 @@ export class TimerManager {
     gameState: GameState,
     onBattleTimeout: (battleId: string) => void
   ): void {
-    // Очищаем предыдущий таймер битвы (если есть)
+
     this.clearBattleTimer(battleId);
 
-    const timeLimit = gameState.battleTimeLimit * 1000; // в миллисекундах
+    const timeLimit = gameState.battleTimeLimit * 1000;
 
     const timer = setTimeout(() => {
       console.log(`⏰ Battle timeout for battle ${battleId}`);
@@ -90,7 +90,7 @@ export class TimerManager {
       c => c.team === Team.PLAYER2 && c.isAlive
     );
 
-    // Сравниваем количество живых персонажей
+
     if (player1Characters.length > player2Characters.length) {
       return Team.PLAYER1;
     }
@@ -98,7 +98,7 @@ export class TimerManager {
       return Team.PLAYER2;
     }
 
-    // Если равно, сравниваем общее здоровье
+
     const player1Health = player1Characters.reduce((sum, c) => sum + c.currentHp, 0);
     const player2Health = player2Characters.reduce((sum, c) => sum + c.currentHp, 0);
 
@@ -109,7 +109,7 @@ export class TimerManager {
       return Team.PLAYER2;
     }
 
-    // Если абсолютно равно - случайный выбор (или ничья, но пока возвращаем PLAYER1)
+
     return Team.PLAYER1;
   }
 }

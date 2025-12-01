@@ -25,36 +25,36 @@ export class CombatSystem {
     target: Character,
     gameState: GameState
   ): { valid: boolean; error?: string } {
-    // Проверка, что персонаж еще не атаковал
+
     if (attacker.hasAttacked) {
       return { valid: false, error: 'Character has already attacked this turn' };
     }
 
-    // Проверка, что цель жива
+
     if (!target.isAlive) {
       return { valid: false, error: 'Target is not alive' };
     }
 
-    // Проверка, что цель - враг
+
     if (attacker.team === target.team) {
       return { valid: false, error: 'Cannot attack ally' };
     }
 
-    // Проверка дистанции в зависимости от типа боя
+
     const distance = this.gridSystem.calculateDistance(attacker.position, target.position);
 
     if (attacker.combatType === CombatType.MELEE) {
-      // Ближний бой - только соседние клетки
+
       if (distance > GAME_CONSTANTS.MELEE_ATTACK_RANGE) {
         return { valid: false, error: 'Target is out of melee range' };
       }
     } else if (attacker.combatType === CombatType.RANGED) {
-      // Дальний бой - проверка дистанции и линии видимости
+
       if (distance > GAME_CONSTANTS.RANGED_ATTACK_RANGE) {
         return { valid: false, error: 'Target is out of ranged attack range' };
       }
 
-      // Проверка прямой видимости
+
       const occupiedCells = gameState.characters
         .filter(c => c.isAlive && c.id !== attacker.id && c.id !== target.id)
         .map(c => c.position);
@@ -75,18 +75,18 @@ export class CombatSystem {
     target: Character,
     gameState: GameState
   ): { damage: number; killed: boolean } {
-    // Расчет урона
+
     const damage = this.calculateDamage(attacker, target);
 
-    // Применение урона
+
     target.currentHp = Math.max(0, target.currentHp - damage);
 
-    // Проверка смерти
+
     if (target.currentHp === 0) {
       target.isAlive = false;
     }
 
-    // Отметка, что персонаж атаковал
+
     attacker.hasAttacked = true;
 
     return {
@@ -99,23 +99,23 @@ export class CombatSystem {
    * Расчет урона с учетом брони и экипировки
    */
   private calculateDamage(attacker: Character, target: Character): number {
-    // Базовый урон атакующего
+
     let totalDamage = attacker.baseDamage;
 
-    // Бонус от оружия
+
     if (attacker.equipment.WEAPON) {
       totalDamage += attacker.equipment.WEAPON.damageBonus || 0;
     }
 
-    // Броня цели
+
     let totalArmor = target.baseArmor;
 
-    // Бонус от брони
+
     if (target.equipment.ARMOR) {
       totalArmor += target.equipment.ARMOR.armorBonus || 0;
     }
 
-    // Финальный урон = урон - броня (минимум 1)
+
     const finalDamage = Math.max(1, totalDamage - totalArmor);
 
     return finalDamage;
@@ -128,12 +128,12 @@ export class CombatSystem {
     const targets: Character[] = [];
 
     for (const character of gameState.characters) {
-      // Пропускаем союзников и мертвых
+
       if (character.team === attacker.team || !character.isAlive) {
         continue;
       }
 
-      // Проверяем возможность атаки
+
       const canAttack = this.canAttack(attacker, character, gameState);
       if (canAttack.valid) {
         targets.push(character);
