@@ -12,7 +12,7 @@ services:
       - key: PORT
         value: 10000
       - key: ALLOWED_ORIGINS
-        value: "*"
+        value: "https://serwer399783.lh.pl/"
       - key: DB_HOST
         value: sql177.lh.pl
       - key: DB_USER
