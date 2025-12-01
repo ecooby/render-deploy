@@ -139,6 +139,16 @@ export class BattleManager {
     this.movementSystem.executeMove(character, action.to, gameState);
     console.log(`✅ Move executed! New position: (${character.position.x},${character.position.y}), remaining movement points: ${gameState.movementPointsLeft}`);
     gameState.updatedAt = new Date();
+    
+    // Check if we should auto end turn
+    if (gameState.autoEndTurn) {
+      console.log('🔄 Auto-ending turn due to movement points exhausted');
+      // Process end turn automatically
+      const endTurnResult = this.handleEndTurn(gameState);
+      if (endTurnResult.success && endTurnResult.newState) {
+        return endTurnResult;
+      }
+    }
 
     return {
       success: true,

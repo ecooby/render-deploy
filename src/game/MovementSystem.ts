@@ -44,35 +44,22 @@ export class MovementSystem {
     if (targetOccupiedByOther) {
       return { valid: false, error: 'Cell is occupied by another character' };
     }
-
-    // Find path using simple BFS (more reliable than A*)
-    const path = this.findPathBFS(character.position, to, gameState.characters, character.id);
-    if (!path) {
-      console.log('❌ Path not found (BFS):', {
-        from: character.position,
-        to,
-        characterName: character.name
-      });
-      return { valid: false, error: 'No valid path to destination' };
+    
+    // Check distance - only allow 1 cell movement
+    const distance = this.gridSystem.calculateDistance(character.position, to);
+    if (distance > GAME_CONSTANTS.MAX_MOVE_DISTANCE_PER_ACTION) {
+      return { valid: false, error: 'Can only move 1 cell at a time' };
     }
-    
-    const pathLength = path.length - 1;
-    
+
     // Initialize movement points if undefined
     if (character.movementPointsLeft === undefined) {
       character.movementPointsLeft = GAME_CONSTANTS.MOVEMENT_POINTS_PER_TURN;
     }
     const characterMovement = character.movementPointsLeft;
     
-    if (pathLength > characterMovement) {
-      console.log('⚠️ Path too long:', {
-        pathLength,
-        characterMovementLeft: characterMovement,
-        from: character.position,
-        to,
-        characterName: character.name
-      });
-      return { valid: false, error: `Not enough movement points (need ${pathLength}, have ${characterMovement})` };
+    // Check if character has movement points left
+    if (characterMovement <= 0) {
+      return { valid: false, error: 'No movement points left' };
     }
 
     return { valid: true };
@@ -86,22 +73,29 @@ export class MovementSystem {
     to: Position,
     gameState: GameState
   ): GameState {
-    const path = this.findPathBFS(character.position, to, gameState.characters, character.id);
-    const pathLength = path ? path.length - 1 : this.gridSystem.calculateDistance(character.position, to);
-    
     // Update character position
     character.position = to;
     
-    // Deduct movement points from the character
+    // Deduct 1 movement point from the character
     if (character.movementPointsLeft === undefined) {
       character.movementPointsLeft = GAME_CONSTANTS.MOVEMENT_POINTS_PER_TURN;
     }
-    character.movementPointsLeft -= pathLength;
+    character.movementPointsLeft -= 1;
     
     // Also update team's global movement points
-    gameState.movementPointsLeft -= pathLength;
+    gameState.movementPointsLeft -= 1;
 
     console.log(`✅ Character ${character.name} moved! Remaining MP: ${character.movementPointsLeft}`);
+    
+    // Check if all movement points are used
+    const allCharactersUsedMovement = gameState.characters
+      .filter(c => c.team === gameState.currentTurn && c.isAlive)
+      .every(c => (c.movementPointsLeft ?? 0) <= 0);
+    
+    if (allCharactersUsedMovement || gameState.movementPointsLeft <= 0) {
+      console.log('🔄 All movement points used - Auto ending turn');
+      gameState.autoEndTurn = true;
+    }
 
     return gameState;
   }
@@ -111,15 +105,11 @@ export class MovementSystem {
    */
   getAvailableMoves(character: Character, gameState: GameState): Position[] {
     const available: Position[] = [];
-    const range = character.movementPointsLeft ?? 0;
-
-    const cellsInRange = this.gridSystem.getCellsInRange(character.position, range);
-
-    for (const cell of cellsInRange) {
-      if (this.gridSystem.positionsEqual(cell, character.position)) {
-        continue;
-      }
-
+    
+    // Only check adjacent cells (1 cell movement)
+    const adjacentCells = this.gridSystem.getAdjacentCells(character.position);
+    
+    for (const cell of adjacentCells) {
       const canMove = this.canMove(character, cell, gameState);
       if (canMove.valid) {
         available.push(cell);
