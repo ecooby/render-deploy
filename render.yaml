@@ -16,10 +16,10 @@ services:
       - key: DB_HOST
         value: sql177.lh.pl
       - key: DB_USER
-        value: serwer399783
+        value: serwer399783_atepic
       - key: DB_PASSWORD
-        value: Haslo098!
+        value: gMqx=>M5VjArTMvr
       - key: DB_NAME
-        value: serwer399783_atEpic
+        value: serwer399783_atepic
       - key: DB_CONNECTION_LIMIT
         value: "10"
