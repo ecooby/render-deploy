@@ -47,6 +47,7 @@ export interface Character {
     isAlive: boolean;
     hasMoved: boolean;
     hasAttacked: boolean;
+    movementPointsLeft?: number;
 }
 export interface Cell {
     position: Position;
