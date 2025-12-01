@@ -42,8 +42,24 @@ export class MovementSystem {
 
     // Проверка пути (A* pathfinding)
     const path = this.findPath(character.position, to, gameState.characters);
-    if (!path || path.length - 1 > gameState.movementPointsLeft) {
+    if (!path) {
+      console.log('❌ Path not found:', {
+        from: character.position,
+        to,
+        characterName: character.name
+      });
       return { valid: false, error: 'No valid path to destination' };
+    }
+    
+    const pathLength = path.length - 1;
+    if (pathLength > gameState.movementPointsLeft) {
+      console.log('⚠️ Path too long:', {
+        pathLength,
+        movementPointsLeft: gameState.movementPointsLeft,
+        from: character.position,
+        to
+      });
+      return { valid: false, error: `Path too long (${pathLength} > ${gameState.movementPointsLeft})` };
     }
 
     return { valid: true };
