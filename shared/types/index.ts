@@ -127,6 +127,7 @@ export enum ActionType {
   ATTACK = 'ATTACK',
   END_TURN = 'END_TURN',
   EQUIP_ITEM = 'EQUIP_ITEM',
+  SURRENDER = 'SURRENDER',
 }
 
 // Действие перемещения
@@ -156,8 +157,13 @@ export interface EquipItemAction {
   equipmentId: string;
 }
 
+// Действие сдачи
+export interface SurrenderAction {
+  type: ActionType.SURRENDER;
+}
+
 // Объединенный тип действий
-export type BattleAction = MoveAction | AttackAction | EndTurnAction | EquipItemAction;
+export type BattleAction = MoveAction | AttackAction | EndTurnAction | EquipItemAction | SurrenderAction;
 
 // Результат действия
 export interface ActionResult {

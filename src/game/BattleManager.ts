@@ -101,6 +101,9 @@ export class BattleManager {
         case ActionType.END_TURN:
           return this.handleEndTurn(gameState);
         
+        case ActionType.SURRENDER:
+          return this.handleSurrender(playerId, gameState);
+        
         default:
           return {
             success: false,
@@ -183,6 +186,30 @@ export class BattleManager {
   private handleEndTurn(gameState: GameState): ActionResult {
     this.turnManager.endTurn(gameState);
     gameState.updatedAt = new Date();
+
+    return {
+      success: true,
+      newState: gameState,
+    };
+  }
+
+  /**
+   * Обработка сдачи (Surrender)
+   * Инициатор сдачи автоматически проигрывает
+   */
+  private handleSurrender(playerId: string, gameState: GameState): ActionResult {
+    console.log(`Player ${playerId} surrendered in battle ${gameState.id}`);
+    
+    // Определяем проигравшего (инициатор сдачи) и победителя
+    const loser = playerId === gameState.player1Id ? Team.PLAYER1 : Team.PLAYER2;
+    const winner = loser === Team.PLAYER1 ? Team.PLAYER2 : Team.PLAYER1;
+    
+    // Завершаем битву
+    gameState.status = 'finished';
+    gameState.winner = winner;
+    gameState.updatedAt = new Date();
+    
+    console.log(`Battle ${gameState.id} ended by surrender. Winner: ${winner}, Loser: ${loser}`);
 
     return {
       success: true,
