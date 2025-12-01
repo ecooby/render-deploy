@@ -128,10 +128,8 @@ export class MovementSystem {
     goal: Position,
     characters: Character[]
   ): Position[] | null {
-    // Упрощенная версия A* для демонстрации
-    // В production версии можно использовать библиотеку pathfinding.js
-    
     const openSet: Position[] = [start];
+    const closedSet = new Set<string>();
     const cameFrom = new Map<string, Position>();
     const gScore = new Map<string, number>();
     const fScore = new Map<string, number>();
@@ -158,10 +156,16 @@ export class MovementSystem {
       }
 
       openSet.splice(currentIndex, 1);
+      closedSet.add(posKey(current));
 
       // Проверяем соседей
       const neighbors = this.gridSystem.getAdjacentCells(current);
       for (const neighbor of neighbors) {
+        // Пропускаем уже проверенные узлы
+        if (closedSet.has(posKey(neighbor))) {
+          continue;
+        }
+
         // Пропускаем занятые клетки (кроме цели)
         if (!this.gridSystem.positionsEqual(neighbor, goal) && 
             this.isCellOccupied(neighbor, characters)) {
