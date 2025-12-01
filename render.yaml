@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: heroes-battle-server
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      - key: DB_HOST
+        value: sql177.lh.pl
+      - key: DB_USER
+        value: serwer399783_atEpic
+      - key: DB_PASSWORD
+        value: gMqx=>M5VjArTMvr
+      - key: DB_NAME
+        value: serwer399783_atEpic
+      - key: DB_CONNECTION_LIMIT
+        value: "10"
