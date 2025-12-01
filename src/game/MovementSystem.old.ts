@@ -2,7 +2,7 @@ import { Position, Character, GameState, GAME_CONSTANTS } from '../../shared/typ
 import { GridSystem } from './GridSystem';
 
 /**
- * Simplified and robust movement system
+ * Система передвижения персонажей
  */
 export class MovementSystem {
   private gridSystem: GridSystem;
@@ -12,7 +12,7 @@ export class MovementSystem {
   }
 
   /**
-   * Check if character can move to position
+   * Проверка возможности перемещения
    */
   canMove(
     character: Character,
@@ -34,7 +34,7 @@ export class MovementSystem {
       return { valid: false, error: 'Already at this position' };
     }
 
-    // Check if target is occupied by another character
+
     const targetOccupiedByOther = gameState.characters.some(
       char => char.isAlive && 
               char.id !== character.id && 
@@ -45,20 +45,22 @@ export class MovementSystem {
       return { valid: false, error: 'Cell is occupied by another character' };
     }
 
-    // Find path using simple BFS (more reliable than A*)
-    const path = this.findPathBFS(character.position, to, gameState.characters, character.id);
+
+    const path = this.findPath(character.position, to, gameState.characters, character.id);
     if (!path) {
-      console.log('❌ Path not found (BFS):', {
+      console.log('❌ Path not found:', {
         from: character.position,
         to,
-        characterName: character.name
+        characterName: character.name,
+        reason: 'A* returned null - no valid path exists'
       });
       return { valid: false, error: 'No valid path to destination' };
     }
     
+
     const pathLength = path.length - 1;
     
-    // Initialize movement points if undefined
+    // Get character's remaining movement points (initialize if undefined)
     if (character.movementPointsLeft === undefined) {
       character.movementPointsLeft = GAME_CONSTANTS.MOVEMENT_POINTS_PER_TURN;
     }
@@ -79,14 +81,14 @@ export class MovementSystem {
   }
 
   /**
-   * Execute move
+   * Выполнить перемещение
    */
   executeMove(
     character: Character,
     to: Position,
     gameState: GameState
   ): GameState {
-    const path = this.findPathBFS(character.position, to, gameState.characters, character.id);
+    const path = this.findPath(character.position, to, gameState.characters, character.id);
     const pathLength = path ? path.length - 1 : this.gridSystem.calculateDistance(character.position, to);
     
     // Update character position
@@ -107,18 +109,21 @@ export class MovementSystem {
   }
 
   /**
-   * Get available moves for a character
+   * Получить все доступные клетки для перемещения
    */
   getAvailableMoves(character: Character, gameState: GameState): Position[] {
     const available: Position[] = [];
     const range = character.movementPointsLeft ?? 0;
 
+
     const cellsInRange = this.gridSystem.getCellsInRange(character.position, range);
 
     for (const cell of cellsInRange) {
+
       if (this.gridSystem.positionsEqual(cell, character.position)) {
         continue;
       }
+
 
       const canMove = this.canMove(character, cell, gameState);
       if (canMove.valid) {
@@ -130,9 +135,18 @@ export class MovementSystem {
   }
 
   /**
-   * Simple BFS pathfinding - more reliable than A* for small grids
+   * Проверка занятости клетки
    */
-  private findPathBFS(
+  private isCellOccupied(pos: Position, characters: Character[]): boolean {
+    return characters.some(
+      char => char.isAlive && this.gridSystem.positionsEqual(char.position, pos)
+    );
+  }
+
+  /**
+   * A* pathfinding для поиска пути
+   */
+  private findPath(
     start: Position,
     goal: Position,
     characters: Character[],
@@ -145,64 +159,103 @@ export class MovementSystem {
     
     // Check if goal is valid
     if (!this.gridSystem.isValidPosition(goal)) {
+      console.log('❌ Goal position is invalid:', goal);
       return null;
     }
+    
+    const openSet: Position[] = [start];
+    const closedSet = new Set<string>();
+    const cameFrom = new Map<string, Position>();
+    const gScore = new Map<string, number>();
+    const fScore = new Map<string, number>();
 
-    const queue: { pos: Position; path: Position[] }[] = [{ pos: start, path: [start] }];
-    const visited = new Set<string>();
     const posKey = (pos: Position) => `${pos.x},${pos.y}`;
+
+    gScore.set(posKey(start), 0);
+    fScore.set(posKey(start), this.gridSystem.calculateDistance(start, goal));
+
+    let iterations = 0;
+    const maxIterations = 1000; // Prevent infinite loops
     
-    visited.add(posKey(start));
-    
-    while (queue.length > 0) {
-      const current = queue.shift()!;
-      
-      // Check if we reached the goal
-      if (this.gridSystem.positionsEqual(current.pos, goal)) {
-        return current.path;
+    while (openSet.length > 0 && iterations < maxIterations) {
+      iterations++;
+
+      let current = openSet[0];
+      let currentIndex = 0;
+      for (let i = 1; i < openSet.length; i++) {
+        if ((fScore.get(posKey(openSet[i])) || Infinity) < (fScore.get(posKey(current)) || Infinity)) {
+          current = openSet[i];
+          currentIndex = i;
+        }
       }
-      
-      // Get neighbors (4-directional)
-      const neighbors = this.gridSystem.getAdjacentCells(current.pos);
-      
+
+
+      if (this.gridSystem.positionsEqual(current, goal)) {
+        console.log(`✅ Path found in ${iterations} iterations`);
+        return this.reconstructPath(cameFrom, current);
+      }
+
+      openSet.splice(currentIndex, 1);
+      closedSet.add(posKey(current));
+
+
+      const neighbors = this.gridSystem.getAdjacentCells(current);
       for (const neighbor of neighbors) {
-        const key = posKey(neighbor);
-        
-        // Skip if already visited
-        if (visited.has(key)) {
+
+        if (closedSet.has(posKey(neighbor))) {
           continue;
         }
-        
-        // Skip if occupied by another character (unless it's the goal)
+
+        // Skip invalid positions
+        if (!this.gridSystem.isValidPosition(neighbor)) {
+          continue;
+        }
+
+
         if (!this.gridSystem.positionsEqual(neighbor, goal)) {
-          const occupied = characters.some(
+          const occupiedByOther = characters.some(
             char => char.isAlive && 
                     char.id !== movingCharacterId && 
                     this.gridSystem.positionsEqual(char.position, neighbor)
           );
-          if (occupied) {
+          if (occupiedByOther) {
             continue;
           }
         }
-        
-        // Mark as visited and add to queue
-        visited.add(key);
-        queue.push({
-          pos: neighbor,
-          path: [...current.path, neighbor]
-        });
+
+        const tentativeGScore = (gScore.get(posKey(current)) || Infinity) + 1;
+
+        if (tentativeGScore < (gScore.get(posKey(neighbor)) || Infinity)) {
+          cameFrom.set(posKey(neighbor), current);
+          gScore.set(posKey(neighbor), tentativeGScore);
+          fScore.set(
+            posKey(neighbor),
+            tentativeGScore + this.gridSystem.calculateDistance(neighbor, goal)
+          );
+
+          if (!openSet.some(pos => this.gridSystem.positionsEqual(pos, neighbor))) {
+            openSet.push(neighbor);
+          }
+        }
       }
     }
-    
-    return null; // No path found
+
+    console.log(`❌ No path found after ${iterations} iterations. Start: (${start.x},${start.y}), Goal: (${goal.x},${goal.y})`);
+    return null;
   }
 
   /**
-   * Check if cell is occupied
+   * Восстановление пути из карты cameFrom
    */
-  private isCellOccupied(pos: Position, characters: Character[]): boolean {
-    return characters.some(
-      char => char.isAlive && this.gridSystem.positionsEqual(char.position, pos)
-    );
+  private reconstructPath(cameFrom: Map<string, Position>, current: Position): Position[] {
+    const path: Position[] = [current];
+    const posKey = (pos: Position) => `${pos.x},${pos.y}`;
+
+    while (cameFrom.has(posKey(current))) {
+      current = cameFrom.get(posKey(current))!;
+      path.unshift(current);
+    }
+
+    return path;
   }
 }

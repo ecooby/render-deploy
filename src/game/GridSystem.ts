@@ -20,9 +20,16 @@ export class GridSystem {
   }
 
   /**
-   * Расчет Manhattan distance между двумя точками
+   * Расчет дистанции между двумя точками (манхэттенское расстояние)
    */
   calculateDistance(from: Position, to: Position): number {
+    return Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
+  }
+  
+  /**
+   * Calculate Manhattan distance (for A* heuristic)
+   */
+  getManhattanDistance(from: Position, to: Position): number {
     return Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
   }
 
@@ -52,21 +59,16 @@ export class GridSystem {
   }
 
   /**
-   * Получить соседние клетки (4 направления - без диагоналей для движения)
+   * Получить соседние клетки (для движения и атак ближнего боя)
    */
-  getAdjacentCells(pos: Position, includeDiagonals = false): Position[] {
-    const directions = includeDiagonals
-      ? [
-          { x: -1, y: -1 }, { x: 0, y: -1 }, { x: 1, y: -1 },
-          { x: -1, y: 0 },                   { x: 1, y: 0 },
-          { x: -1, y: 1 },  { x: 0, y: 1 },  { x: 1, y: 1 },
-        ]
-      : [
-          { x: 0, y: -1 },
-          { x: -1, y: 0 },
-          { x: 1, y: 0 },
-          { x: 0, y: 1 },
-        ];
+  getAdjacentCells(pos: Position, includeDiagonal = false): Position[] {
+    // Always use 4-directional movement for pathfinding
+    const directions = [
+      { x: 0, y: -1 },  // up
+      { x: -1, y: 0 },  // left
+      { x: 1, y: 0 },   // right
+      { x: 0, y: 1 },   // down
+    ];
 
     return directions
       .map(dir => ({ x: pos.x + dir.x, y: pos.y + dir.y }))
