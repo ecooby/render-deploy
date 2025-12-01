@@ -29,37 +29,42 @@ export class MovementSystem {
       return { valid: false, error: 'Invalid position' };
     }
 
-    // Проверка, что клетка не занята
-    if (this.isCellOccupied(to, gameState.characters)) {
-      return { valid: false, error: 'Cell is occupied' };
-    }
-
-    // Проверка дистанции
-    const distance = this.gridSystem.calculateDistance(character.position, to);
-    if (distance > gameState.movementPointsLeft) {
-      return { valid: false, error: 'Not enough movement points' };
+    // Проверка, что целевая клетка не занята ДРУГИМ персонажем
+    const targetOccupiedByOther = gameState.characters.some(
+      char => char.isAlive && 
+              char.id !== character.id && 
+              this.gridSystem.positionsEqual(char.position, to)
+    );
+    
+    if (targetOccupiedByOther) {
+      return { valid: false, error: 'Cell is occupied by another character' };
     }
 
     // Проверка пути (A* pathfinding)
-    const path = this.findPath(character.position, to, gameState.characters);
+    const path = this.findPath(character.position, to, gameState.characters, character.id);
     if (!path) {
       console.log('❌ Path not found:', {
         from: character.position,
         to,
-        characterName: character.name
+        characterName: character.name,
+        reason: 'A* returned null - no valid path exists'
       });
       return { valid: false, error: 'No valid path to destination' };
     }
     
+    // Длина пути (без учёта стартовой позиции)
     const pathLength = path.length - 1;
+    
+    // Проверка очков движения
     if (pathLength > gameState.movementPointsLeft) {
       console.log('⚠️ Path too long:', {
         pathLength,
         movementPointsLeft: gameState.movementPointsLeft,
         from: character.position,
-        to
+        to,
+        characterName: character.name
       });
-      return { valid: false, error: `Path too long (${pathLength} > ${gameState.movementPointsLeft})` };
+      return { valid: false, error: `Not enough movement points (need ${pathLength}, have ${gameState.movementPointsLeft})` };
     }
 
     return { valid: true };
@@ -126,7 +131,8 @@ export class MovementSystem {
   private findPath(
     start: Position,
     goal: Position,
-    characters: Character[]
+    characters: Character[],
+    movingCharacterId?: string
   ): Position[] | null {
     const openSet: Position[] = [start];
     const closedSet = new Set<string>();
@@ -166,10 +172,16 @@ export class MovementSystem {
           continue;
         }
 
-        // Пропускаем занятые клетки (кроме цели)
-        if (!this.gridSystem.positionsEqual(neighbor, goal) && 
-            this.isCellOccupied(neighbor, characters)) {
-          continue;
+        // Пропускаем занятые клетки (кроме цели и своей текущей позиции)
+        if (!this.gridSystem.positionsEqual(neighbor, goal)) {
+          const occupiedByOther = characters.some(
+            char => char.isAlive && 
+                    char.id !== movingCharacterId && 
+                    this.gridSystem.positionsEqual(char.position, neighbor)
+          );
+          if (occupiedByOther) {
+            continue;
+          }
         }
 
         const tentativeGScore = (gScore.get(posKey(current)) || Infinity) + 1;
