@@ -12,14 +12,14 @@ services:
       - key: PORT
         value: 10000
       - key: ALLOWED_ORIGINS
-        value: "https://serwer399783.lh.pl/,http://localhost:8080,http://127.0.0.1:8080"
+        value: "https://serwer399783.lh.pl,http://localhost:8080,http://127.0.0.1:8080"
       - key: DB_HOST
         value: sql177.lh.pl
       - key: DB_USER
         value: serwer399783_atepic
       - key: DB_PASSWORD
-        value: Haslo098!
+        value: gMqx=>M5VjArTMvr
       - key: DB_NAME
-        value: serwer399783_atEpic
+        value: serwer399783_atepic
       - key: DB_CONNECTION_LIMIT
         value: "10"

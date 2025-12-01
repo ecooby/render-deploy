@@ -2,9 +2,9 @@ import mysql from 'mysql2/promise';
 
 const DB_CONFIG = {
   host: process.env.DB_HOST || 'sql177.lh.pl',
-  user: process.env.DB_USER || 'serwer399783_atEpic',
+  user: process.env.DB_USER || 'serwer399783_atepic',
   password: process.env.DB_PASSWORD || 'gMqx=>M5VjArTMvr',
-  database: process.env.DB_NAME || 'serwer399783_atEpic',
+  database: process.env.DB_NAME || 'serwer399783_atepic',
   waitForConnections: true,
   connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT || '10'),
   queueLimit: 0
