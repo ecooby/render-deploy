@@ -8,20 +8,20 @@ export class TurnManager {
    * Начать новый ход
    */
   startTurn(gameState: GameState): GameState {
-
     const currentTeam = gameState.currentTurn;
     
+    // Reset character states and movement points for current team
     gameState.characters.forEach(char => {
       if (char.team === currentTeam && char.isAlive) {
-        char.hasMoved = false;
         char.hasAttacked = false;
+        char.movementPointsLeft = GAME_CONSTANTS.MOVEMENT_POINTS_PER_TURN;
       }
     });
 
-
+    // Set global movement points
     gameState.movementPointsLeft = GAME_CONSTANTS.MOVEMENT_POINTS_PER_TURN;
 
-
+    // Set turn start time
     gameState.turnStartTime = Date.now();
 
     return gameState;
@@ -71,14 +71,13 @@ export class TurnManager {
       c => c.team === currentTeam && c.isAlive
     );
 
+    // Check if any character has movement points left
+    const canMove = teamCharacters.some(c => 
+      (c.movementPointsLeft ?? 0) > 0
+    );
+    if (canMove) return true;
 
-    if (gameState.movementPointsLeft > 0) {
-
-      const canMove = teamCharacters.some(c => !c.hasMoved);
-      if (canMove) return true;
-    }
-
-
+    // Check if any character can attack
     const canAttack = teamCharacters.some(c => !c.hasAttacked);
     if (canAttack) return true;
 

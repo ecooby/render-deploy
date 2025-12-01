@@ -243,6 +243,7 @@ export class BattleManager {
       isAlive: true,
       hasMoved: false,
       hasAttacked: false,
+      movementPointsLeft: GAME_CONSTANTS.MOVEMENT_POINTS_PER_TURN,
     });
 
 
@@ -263,6 +264,7 @@ export class BattleManager {
       isAlive: true,
       hasMoved: false,
       hasAttacked: false,
+      movementPointsLeft: GAME_CONSTANTS.MOVEMENT_POINTS_PER_TURN,
     });
 
 
@@ -283,6 +285,7 @@ export class BattleManager {
       isAlive: true,
       hasMoved: false,
       hasAttacked: false,
+      movementPointsLeft: GAME_CONSTANTS.MOVEMENT_POINTS_PER_TURN,
     });
 
     return characters;

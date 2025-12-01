@@ -19,14 +19,19 @@ export class MovementSystem {
     to: Position,
     gameState: GameState
   ): { valid: boolean; error?: string } {
-
-    if (character.hasMoved) {
-      return { valid: false, error: 'Character has already moved this turn' };
+    // Check if it's the character's team turn
+    if (character.team !== gameState.currentTurn) {
+      return { valid: false, error: 'Not this character\'s turn' };
     }
 
-
+    // Check if position is valid
     if (!this.gridSystem.isValidPosition(to)) {
       return { valid: false, error: 'Invalid position' };
+    }
+    
+    // Check if trying to move to same position
+    if (this.gridSystem.positionsEqual(character.position, to)) {
+      return { valid: false, error: 'Already at this position' };
     }
 
 
@@ -55,16 +60,18 @@ export class MovementSystem {
 
     const pathLength = path.length - 1;
     
-
-    if (pathLength > gameState.movementPointsLeft) {
+    // Get character's remaining movement points
+    const characterMovement = character.movementPointsLeft ?? 0;
+    
+    if (pathLength > characterMovement) {
       console.log('⚠️ Path too long:', {
         pathLength,
-        movementPointsLeft: gameState.movementPointsLeft,
+        characterMovementLeft: characterMovement,
         from: character.position,
         to,
         characterName: character.name
       });
-      return { valid: false, error: `Not enough movement points (need ${pathLength}, have ${gameState.movementPointsLeft})` };
+      return { valid: false, error: `Not enough movement points (need ${pathLength}, have ${characterMovement})` };
     }
 
     return { valid: true };
@@ -81,10 +88,19 @@ export class MovementSystem {
     const path = this.findPath(character.position, to, gameState.characters, character.id);
     const pathLength = path ? path.length - 1 : this.gridSystem.calculateDistance(character.position, to);
     
+    // Update character position
     character.position = to;
-    character.hasMoved = true;
     
+    // Deduct movement points from the character
+    if (character.movementPointsLeft === undefined) {
+      character.movementPointsLeft = GAME_CONSTANTS.MOVEMENT_POINTS_PER_TURN;
+    }
+    character.movementPointsLeft -= pathLength;
+    
+    // Also update team's global movement points
     gameState.movementPointsLeft -= pathLength;
+
+    console.log(`✅ Character ${character.name} moved! Remaining MP: ${character.movementPointsLeft}`);
 
     return gameState;
   }
@@ -94,7 +110,7 @@ export class MovementSystem {
    */
   getAvailableMoves(character: Character, gameState: GameState): Position[] {
     const available: Position[] = [];
-    const range = gameState.movementPointsLeft;
+    const range = character.movementPointsLeft ?? 0;
 
 
     const cellsInRange = this.gridSystem.getCellsInRange(character.position, range);

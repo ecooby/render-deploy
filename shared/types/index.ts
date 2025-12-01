@@ -74,6 +74,7 @@ export interface Character {
   isAlive: boolean;
   hasMoved: boolean;
   hasAttacked: boolean;
+  movementPointsLeft?: number;
 }
 
 
