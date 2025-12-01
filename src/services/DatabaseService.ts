@@ -53,7 +53,8 @@ export class DatabaseService {
       console.log('✅ MySQL Database initialized');
     } catch (error) {
       console.error('❌ Database initialization error:', error);
-      throw error;
+      console.warn('⚠️ Server will continue without database functionality');
+      // Don't throw - allow server to run without DB for guest games
     }
   }
 
