@@ -183,6 +183,21 @@ export class BattleManager {
       gameState.status = 'finished';
       gameState.winner = battleEnd.winner === gameState.player1Id ? Team.PLAYER1 : Team.PLAYER2;
     }
+    
+    // Check if we should auto end turn
+    if (gameState.autoEndTurn && !battleEnd.ended) {
+      console.log('🔄 Auto-ending turn due to all characters attacked');
+      // Process end turn automatically
+      const endTurnResult = this.handleEndTurn(gameState);
+      if (endTurnResult.success && endTurnResult.newState) {
+        return {
+          success: true,
+          newState: endTurnResult.newState,
+          damage: result.damage,
+          killedCharacterId: result.killed ? target.id : undefined,
+        };
+      }
+    }
 
     return {
       success: true,

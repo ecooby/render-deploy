@@ -88,6 +88,17 @@ export class CombatSystem {
 
 
     attacker.hasAttacked = true;
+    
+    // Check if all characters of current team have attacked
+    const currentTeamCharacters = gameState.characters
+      .filter(c => c.team === gameState.currentTurn && c.isAlive);
+    
+    const allAttacked = currentTeamCharacters.every(c => c.hasAttacked);
+    
+    if (allAttacked) {
+      console.log('🔄 All characters have attacked - Auto ending turn');
+      gameState.autoEndTurn = true;
+    }
 
     return {
       damage,

@@ -73,6 +73,7 @@ export interface GameState {
     battleTimeLimit: number;
     createdAt: Date;
     updatedAt: Date;
+    autoEndTurn?: boolean;
 }
 export declare enum ActionType {
     MOVE = "MOVE",
@@ -147,6 +148,7 @@ export declare const GAME_CONSTANTS: {
     GRID_HEIGHT: number;
     MAX_CHARACTERS_PER_TEAM: number;
     MOVEMENT_POINTS_PER_TURN: number;
+    MAX_MOVE_DISTANCE_PER_ACTION: number;
     MELEE_ATTACK_RANGE: number;
     RANGED_ATTACK_RANGE: number;
     TURN_TIME_LIMIT: number;
