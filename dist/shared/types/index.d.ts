@@ -3,7 +3,7 @@ export interface Position {
     y: number;
 }
 export declare enum CombatType {
-    MELEE = "MELEE",// Ближний бой
+    MELEE = "MELEE",
     RANGED = "RANGED"
 }
 export declare enum Team {
@@ -66,6 +66,10 @@ export interface GameState {
     movementPointsLeft: number;
     status: 'waiting' | 'active' | 'finished';
     winner?: Team;
+    turnStartTime?: number;
+    turnTimeLimit: number;
+    battleStartTime?: number;
+    battleTimeLimit: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -73,7 +77,8 @@ export declare enum ActionType {
     MOVE = "MOVE",
     ATTACK = "ATTACK",
     END_TURN = "END_TURN",
-    EQUIP_ITEM = "EQUIP_ITEM"
+    EQUIP_ITEM = "EQUIP_ITEM",
+    SURRENDER = "SURRENDER"
 }
 export interface MoveAction {
     type: ActionType.MOVE;
@@ -94,7 +99,10 @@ export interface EquipItemAction {
     characterId: string;
     equipmentId: string;
 }
-export type BattleAction = MoveAction | AttackAction | EndTurnAction | EquipItemAction;
+export interface SurrenderAction {
+    type: ActionType.SURRENDER;
+}
+export type BattleAction = MoveAction | AttackAction | EndTurnAction | EquipItemAction | SurrenderAction;
 export interface ActionResult {
     success: boolean;
     error?: string;
@@ -141,6 +149,7 @@ export declare const GAME_CONSTANTS: {
     MELEE_ATTACK_RANGE: number;
     RANGED_ATTACK_RANGE: number;
     TURN_TIME_LIMIT: number;
+    BATTLE_TIME_LIMIT: number;
     LEVEL_UP_EXP_BASE: number;
     LEVEL_UP_EXP_MULTIPLIER: number;
     SLOT_UNLOCK_LEVELS: {
