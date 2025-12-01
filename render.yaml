@@ -14,7 +14,7 @@ services:
       - key: ALLOWED_ORIGINS
         value: "https://serwer399783.lh.pl/"
       - key: DB_HOST
-        value: sql177.lh.pl
+        value: serwer399783.lh.pl
       - key: DB_USER
         value: serwer399783_atEpic
       - key: DB_PASSWORD
