@@ -16,7 +16,11 @@ const httpServer = createServer(app);
 const rawAllowedOrigins = process.env.ALLOWED_ORIGINS;
 const allowedOrigins: string | string[] = !rawAllowedOrigins || rawAllowedOrigins === '*'
   ? '*'
-  : rawAllowedOrigins.split(',');
+  : rawAllowedOrigins.split(',').map(origin => origin.trim());
+
+console.log('🔒 CORS Configuration:');
+console.log('  Raw ALLOWED_ORIGINS:', rawAllowedOrigins);
+console.log('  Parsed allowedOrigins:', allowedOrigins);
 
 app.use(cors({
   origin: allowedOrigins,
