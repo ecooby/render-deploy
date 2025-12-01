@@ -12,7 +12,7 @@ services:
       - key: PORT
         value: 10000
       - key: ALLOWED_ORIGINS
-        value: "https://serwer399783.lh.pl/"
+        value: "https://serwer399783.lh.pl,http://localhost:8080,http://127.0.0.1:8080"
       - key: DB_HOST
         value: sql177.lh.pl
       - key: DB_USER
