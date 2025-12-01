@@ -14,11 +14,11 @@ services:
       - key: ALLOWED_ORIGINS
         value: "https://serwer399783.lh.pl/"
       - key: DB_HOST
-        value: serwer399783.lh.pl
+        value: sql177.lh.pl
       - key: DB_USER
-        value: serwer399783_atEpic
+        value: serwer399783
       - key: DB_PASSWORD
-        value: gMqx=>M5VjArTMvr
+        value: Haslo098!
       - key: DB_NAME
         value: serwer399783_atEpic
       - key: DB_CONNECTION_LIMIT
