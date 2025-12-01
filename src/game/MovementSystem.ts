@@ -78,14 +78,13 @@ export class MovementSystem {
     to: Position,
     gameState: GameState
   ): GameState {
-    const distance = this.gridSystem.calculateDistance(character.position, to);
+    const path = this.findPath(character.position, to, gameState.characters, character.id);
+    const pathLength = path ? path.length - 1 : this.gridSystem.calculateDistance(character.position, to);
     
-
     character.position = to;
     character.hasMoved = true;
     
-
-    gameState.movementPointsLeft -= distance;
+    gameState.movementPointsLeft -= pathLength;
 
     return gameState;
   }

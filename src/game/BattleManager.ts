@@ -128,14 +128,16 @@ export class BattleManager {
       return { success: false, error: 'Character not found' };
     }
 
+    console.log(`🚶 Move attempt: ${character.name} from (${character.position.x},${character.position.y}) to (${action.to.x},${action.to.y}), movement points: ${gameState.movementPointsLeft}`);
 
     const canMove = this.movementSystem.canMove(character, action.to, gameState);
     if (!canMove.valid) {
+      console.log(`❌ Move validation failed: ${canMove.error}`);
       return { success: false, error: canMove.error };
     }
 
-
     this.movementSystem.executeMove(character, action.to, gameState);
+    console.log(`✅ Move executed! New position: (${character.position.x},${character.position.y}), remaining movement points: ${gameState.movementPointsLeft}`);
     gameState.updatedAt = new Date();
 
     return {
