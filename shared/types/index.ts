@@ -110,6 +110,12 @@ export interface GameState {
   status: 'waiting' | 'active' | 'finished';
   winner?: Team;
   
+  // Таймеры
+  turnStartTime?: number; // Timestamp начала текущего хода
+  turnTimeLimit: number; // Лимит времени на ход в секундах
+  battleStartTime?: number; // Timestamp начала битвы
+  battleTimeLimit: number; // Лимит времени на всю битву в секундах
+  
   // Время
   createdAt: Date;
   updatedAt: Date;
@@ -214,7 +220,8 @@ export const GAME_CONSTANTS = {
   MOVEMENT_POINTS_PER_TURN: 5, // Увеличено с 2 до 5 для лучшего геймплея
   MELEE_ATTACK_RANGE: 1,
   RANGED_ATTACK_RANGE: 4,
-  TURN_TIME_LIMIT: 60, // секунды
+  TURN_TIME_LIMIT: 30, // секунды на ход
+  BATTLE_TIME_LIMIT: 600, // секунды на всю битву (10 минут)
   
   // Прогрессия уровней
   LEVEL_UP_EXP_BASE: 100,

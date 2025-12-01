@@ -52,14 +52,21 @@ export class GridSystem {
   }
 
   /**
-   * Получить соседние клетки (8 направлений)
+   * Получить соседние клетки (4 направления - без диагоналей для движения)
    */
-  getAdjacentCells(pos: Position): Position[] {
-    const directions = [
-      { x: -1, y: -1 }, { x: 0, y: -1 }, { x: 1, y: -1 },
-      { x: -1, y: 0 },                   { x: 1, y: 0 },
-      { x: -1, y: 1 },  { x: 0, y: 1 },  { x: 1, y: 1 },
-    ];
+  getAdjacentCells(pos: Position, includeDiagonals = false): Position[] {
+    const directions = includeDiagonals
+      ? [
+          { x: -1, y: -1 }, { x: 0, y: -1 }, { x: 1, y: -1 },
+          { x: -1, y: 0 },                   { x: 1, y: 0 },
+          { x: -1, y: 1 },  { x: 0, y: 1 },  { x: 1, y: 1 },
+        ]
+      : [
+          { x: 0, y: -1 }, // вверх
+          { x: -1, y: 0 }, // влево
+          { x: 1, y: 0 },  // вправо
+          { x: 0, y: 1 },  // вниз
+        ];
 
     return directions
       .map(dir => ({ x: pos.x + dir.x, y: pos.y + dir.y }))

@@ -21,6 +21,9 @@ export class TurnManager {
     // Восстановление очков передвижения
     gameState.movementPointsLeft = GAME_CONSTANTS.MOVEMENT_POINTS_PER_TURN;
 
+    // Обновляем время начала хода
+    gameState.turnStartTime = Date.now();
+
     return gameState;
   }
 

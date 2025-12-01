@@ -51,6 +51,7 @@ export class BattleManager {
       { x: 0, y: 7 },
     ]);
 
+    const now = Date.now();
     const gameState: GameState = {
       id: battleId,
       player1Id,
@@ -62,6 +63,10 @@ export class BattleManager {
       turnNumber: 1,
       movementPointsLeft: GAME_CONSTANTS.MOVEMENT_POINTS_PER_TURN,
       status: 'active',
+      turnStartTime: now,
+      turnTimeLimit: GAME_CONSTANTS.TURN_TIME_LIMIT,
+      battleStartTime: now,
+      battleTimeLimit: GAME_CONSTANTS.BATTLE_TIME_LIMIT,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
