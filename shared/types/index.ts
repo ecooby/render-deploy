@@ -220,8 +220,8 @@ export const GAME_CONSTANTS = {
   MOVEMENT_POINTS_PER_TURN: 5, // Увеличено с 2 до 5 для лучшего геймплея
   MELEE_ATTACK_RANGE: 1,
   RANGED_ATTACK_RANGE: 4,
-  TURN_TIME_LIMIT: 30, // секунды на ход
-  BATTLE_TIME_LIMIT: 600, // секунды на всю битву (10 минут)
+  TURN_TIME_LIMIT: 15, // секунды на ход
+  BATTLE_TIME_LIMIT: 900, // секунды на всю битву (15 минут)
   
   // Прогрессия уровней
   LEVEL_UP_EXP_BASE: 100,

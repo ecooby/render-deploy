@@ -3,6 +3,7 @@ import { SocketEvent, BattleAction, GameState, Team, ActionType } from '../../sh
 import { BattleManager } from '../game/BattleManager';
 import { MatchmakingService } from '../services/MatchmakingService';
 import { BotAI } from '../game/BotAI';
+import { TimerManager } from '../game/TimerManager';
 import { databaseService } from '../services/DatabaseService';
 
 /**
@@ -13,6 +14,7 @@ export class SocketHandler {
   private battleManager: BattleManager;
   private matchmakingService: MatchmakingService;
   private botAI: BotAI;
+  private timerManager: TimerManager;
   private activeBattles: Map<string, GameState> = new Map();
   private playerSockets: Map<string, string> = new Map(); // playerId -> socketId
 
@@ -20,11 +22,14 @@ export class SocketHandler {
     this.io = io;
     this.battleManager = new BattleManager();
     this.botAI = new BotAI(this.battleManager);
+    this.timerManager = new TimerManager();
     this.matchmakingService = new MatchmakingService(
       io,
       this.battleManager,
       (gameState: GameState) => {
         this.activeBattles.set(gameState.id, gameState);
+        // Запускаем таймеры для новой битвы
+        this.startBattleTimers(gameState.id, gameState);
       },
     );
   }
@@ -153,8 +158,16 @@ export class SocketHandler {
 
         // Проверка окончания битвы
         if (result.newState.status === 'finished') {
+          this.timerManager.clearAllTimers(battleId);
           this.handleBattleEnd(battleId, result.newState);
         } else {
+           // Если ход завершён, перезапускаем таймер хода
+           if (action.type === ActionType.END_TURN) {
+             this.timerManager.startTurnTimer(battleId, result.newState, (bId) => {
+               this.handleTurnTimeout(bId);
+             });
+           }
+           
            // Check if it's bot's turn
            if (result.newState.currentTurn === Team.PLAYER2 && result.newState.player2Id === 'AI_BOT') {
               this.handleBotTurn(battleId, result.newState);
@@ -186,6 +199,63 @@ export class SocketHandler {
       // TODO: Обработка отключения во время битвы
       // Можно дать игроку время на переподключение
     });
+  }
+
+  /**
+   * Запуск таймеров для битвы
+   */
+  private startBattleTimers(battleId: string, gameState: GameState): void {
+    // Таймер хода
+    this.timerManager.startTurnTimer(battleId, gameState, (bId) => {
+      this.handleTurnTimeout(bId);
+    });
+
+    // Таймер битвы
+    this.timerManager.startBattleTimer(battleId, gameState, (bId) => {
+      this.handleBattleTimeout(bId);
+    });
+  }
+
+  /**
+   * Обработка истечения времени хода
+   */
+  private handleTurnTimeout(battleId: string): void {
+    const gameState = this.activeBattles.get(battleId);
+    if (!gameState || gameState.status !== 'active') {
+      return;
+    }
+
+    console.log(`⏰ Turn timeout - auto ending turn for ${gameState.currentTurn}`);
+
+    // Автоматически завершаем ход
+    const action: BattleAction = {
+      type: ActionType.END_TURN,
+    };
+
+    this.processBattleAction(battleId, action, 'SYSTEM');
+  }
+
+  /**
+   * Обработка истечения времени битвы
+   */
+  private handleBattleTimeout(battleId: string): void {
+    const gameState = this.activeBattles.get(battleId);
+    if (!gameState || gameState.status !== 'active') {
+      return;
+    }
+
+    console.log(`⏰ Battle timeout - determining winner by remaining forces`);
+
+    // Определяем победителя
+    gameState.winner = this.timerManager.determineWinnerByTime(gameState);
+    gameState.status = 'finished';
+    this.activeBattles.set(battleId, gameState);
+
+    // Очищаем таймеры
+    this.timerManager.clearAllTimers(battleId);
+
+    // Завершаем битву
+    this.handleBattleEnd(battleId, gameState);
   }
 
   /**
@@ -231,6 +301,7 @@ export class SocketHandler {
     // Удаляем битву через некоторое время
     setTimeout(() => {
       this.activeBattles.delete(battleId);
+      this.timerManager.clearAllTimers(battleId);
       console.log(`Battle ${battleId} removed from active battles`);
     }, 30000); // 30 секунд
   }
