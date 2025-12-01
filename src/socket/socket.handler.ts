@@ -83,14 +83,24 @@ export class SocketHandler {
   private registerBattleHandlers(socket: Socket, playerId: string) {
     // Присоединение к битве
     socket.on(SocketEvent.BATTLE_JOIN, (battleId: string) => {
-      console.log(`Player ${playerId} joining battle ${battleId}`);
+      const gameState = this.activeBattles.get(battleId);
+      if (!gameState) {
+        socket.emit(SocketEvent.BATTLE_ERROR, { message: 'Battle not found' });
+        return;
+      }
+
+      // Проверяем, является ли игрок участником битвы
+      const isParticipant = playerId === gameState.player1Id || playerId === gameState.player2Id;
+      const role = isParticipant ? 'participant' : 'spectator';
+      
+      console.log(`Player ${playerId} joining battle ${battleId} as ${role}`);
       socket.join(battleId);
 
-      // Отправляем текущее состояние
-      const gameState = this.activeBattles.get(battleId);
-      if (gameState) {
-        socket.emit(SocketEvent.BATTLE_STATE, gameState);
-      }
+      // Отправляем текущее состояние с ролью
+      socket.emit(SocketEvent.BATTLE_STATE, {
+        ...gameState,
+        spectatorMode: !isParticipant
+      });
     });
 
     // Действие в битве
@@ -103,9 +113,19 @@ export class SocketHandler {
 
   private processBattleAction(battleId: string, action: BattleAction, playerId: string) {
     const gameState = this.activeBattles.get(battleId);
-      if (!gameState) {
-        return;
-      }
+    if (!gameState) {
+      return;
+    }
+
+    // 🔒 SECURITY: Проверяем, что игрок - участник битвы, а не наблюдатель
+    const isParticipant = playerId === gameState.player1Id || playerId === gameState.player2Id;
+    if (!isParticipant) {
+      console.warn(`⚠️ Spectator ${playerId} attempted to perform action in battle ${battleId}`);
+      this.io.to(battleId).emit(SocketEvent.BATTLE_ERROR, {
+        message: 'Spectators cannot perform actions'
+      });
+      return;
+    }
 
       // Обработка действия
       const result = this.battleManager.processAction(action, playerId, gameState);
